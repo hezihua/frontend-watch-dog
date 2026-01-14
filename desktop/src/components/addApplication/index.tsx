@@ -22,10 +22,24 @@ export const AddApplication: React.FC<AddApplicationIn> = ({ open, onClose }) =>
       onOk={async() => {
         await form.validateFields();
         setLoading(true);
-        await createApp(form.getFieldsValue());
+        const result = await createApp(form.getFieldsValue());
         await appDispatch.getAppList();
         setLoading(false);
-        message.success('应用成功创建！');
+        if (result?.data?.appId) {
+          Modal.success({
+            title: '应用创建成功！',
+            content: (
+              <div>
+                <p>应用名称：{result.data.appName}</p>
+                <p>应用ID：<strong style={{ color: '#1890ff', userSelect: 'all' }}>{result.data.appId}</strong></p>
+                <p style={{ marginTop: 16, color: '#666' }}>请复制上面的 appId，在集成 SDK 时使用</p>
+              </div>
+            ),
+            width: 500,
+          });
+        } else {
+          message.success('应用成功创建！');
+        }
         onClose();
       }}
       onCancel={onClose}

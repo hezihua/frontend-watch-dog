@@ -41,10 +41,12 @@ export const AppItem: React.FC<AppItemIn> = ({ appInfo }) => {
           : <>
             <div className={styles.title}>
               {appInfo.appName}
-
+              <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
+                (ID: {appInfo.appId.substring(0, 8)}...)
+              </span>
               <Tooltip
                 placement="top"
-                title="复制AppId" >
+                title="点击复制完整 AppId" >
                 <CopyOutlined
                   className={styles.icon}
                   onClick={() => {

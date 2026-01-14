@@ -30,7 +30,7 @@ export default class ReportController extends Controller {
         await this.service.mysql.traffics.index.createTrafficTable(appId);
         await this.service.elasticsearch.report.index.createIndex(appId);
         await this.service.redis.cache.updateAppStatus(appId, true);
-        this.ctx.success();
+        this.ctx.success({ appId, appName });
       }
     } catch (error) {
       this.app.logger.error(error);
