@@ -122,56 +122,24 @@ export default function MainLayout({
         style={{
           width: leftSideWidth,
           height: '100vh',
-          background: 'rgb(70, 132, 255)',
+          background: 'white',
           transition: 'all cubic-bezier(0.2, 0, 0, 1) 0.3s',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
+          borderRight: '1px solid #f0f0f0',
         }}
       >
-        {/* 装饰圆角 - 顶部 */}
-        <svg
-          style={{
-            position: 'absolute',
-            width: 35,
-            height: 35,
-            left: '100%',
-            top: 0,
-            zIndex: 100,
-          }}
-          width="35"
-          height="35"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M35,0 A35,35 0 0,0 0,35 L0,0 Z" fill="#4684ff" stroke="#4684ff" />
-        </svg>
-        
-        {/* 装饰圆角 - 底部 */}
-        <svg
-          style={{
-            position: 'absolute',
-            width: 35,
-            height: 35,
-            left: '100%',
-            bottom: 0,
-            zIndex: 100,
-          }}
-          width="35"
-          height="35"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M0,0 A35,35 0 0,0 35,35 L0,35 Z" fill="#4684ff" stroke="#4684ff" />
-        </svg>
-
         {/* Logo */}
         <div
           style={{
             width: '100%',
             height: 70,
-            background: 'rgb(70, 132, 255)',
-            color: 'white',
+            background: 'white',
+            color: '#333',
             padding: '15px 0',
             overflow: 'hidden',
+            borderBottom: '1px solid #f0f0f0',
           }}
         >
           <div style={{ width: '100%', height: 40, overflow: 'hidden', display: 'flex', alignItems: 'center', paddingLeft: 20 }}>
@@ -180,19 +148,19 @@ export default function MainLayout({
                 width: 40,
                 height: 40,
                 borderRadius: '50%',
-                background: 'white',
+                background: '#1890ff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 20,
                 fontWeight: 'bold',
-                color: 'rgb(70, 132, 255)',
+                color: 'white',
               }}
             >
               监
             </div>
             {!collapsed && (
-              <span style={{ marginLeft: 10, fontSize: 16, fontWeight: 500 }}>
+              <span style={{ marginLeft: 10, fontSize: 16, fontWeight: 500, color: '#333' }}>
                 前端监控平台
               </span>
             )}
@@ -200,17 +168,17 @@ export default function MainLayout({
         </div>
 
         {/* 菜单 */}
-        <div style={{ height: 'calc(100vh - 70px)', overflowY: 'auto' }}>
+        <div style={{ height: 'calc(100vh - 70px)', overflowY: 'auto', background: 'white' }}>
           <Sider
-            style={{ width: leftSideWidth, maxWidth: leftSideWidth }}
+            style={{ width: leftSideWidth, maxWidth: leftSideWidth, background: 'white' }}
             collapsed={collapsed}
             collapsible
             trigger={null}
           >
             <Menu
               selectedKeys={[pathname]}
-              theme="dark"
-              style={{ width: leftSideWidth, fontSize: 16 }}
+              theme="light"
+              style={{ width: leftSideWidth, fontSize: 16, background: 'white', border: 'none' }}
               mode="inline"
               onSelect={(info) => router.push(info.key)}
               items={menus}
