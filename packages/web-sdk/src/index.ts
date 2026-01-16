@@ -1,4 +1,4 @@
-import { onFID, onLCP, onFCP, onTTFB } from 'web-vitals/attribution';
+import { onFID, onLCP, onFCP, onTTFB } from 'web-vitals';
 import { _history } from './history';
 import { generateShortUUID, getUrlQuery } from './utils';
 
