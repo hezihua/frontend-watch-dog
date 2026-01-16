@@ -127,8 +127,9 @@ export async function checkErrorRateAlert(appId: string): Promise<void> {
       },
     });
 
-    const total = result.aggregations?.total_requests?.value || 0;
-    const errors = result.aggregations?.error_requests?.doc_count || 0;
+    const aggs = result.body?.aggregations;
+    const total = aggs?.total_requests?.value || 0;
+    const errors = aggs?.error_requests?.doc_count || 0;
 
     if (total === 0) return;
 
@@ -194,8 +195,9 @@ export async function checkPerformanceAlert(appId: string): Promise<void> {
       },
     });
 
-    const avgFcp = result.aggregations?.avg_fcp?.value || 0;
-    const avgLcp = result.aggregations?.avg_lcp?.value || 0;
+    const aggs2 = result.body?.aggregations;
+    const avgFcp = aggs2?.avg_fcp?.value || 0;
+    const avgLcp = aggs2?.avg_lcp?.value || 0;
 
     // 如果 FCP > 3秒 或 LCP > 4秒，发送告警
     if (avgFcp > 3000 || avgLcp > 4000) {
@@ -261,7 +263,8 @@ export async function checkJsErrorAlert(appId: string): Promise<void> {
       },
     });
 
-    const errorCount = result.aggregations?.error_count?.value || 0;
+    const aggs3 = result.body?.aggregations;
+    const errorCount = aggs3?.error_count?.value || 0;
 
     // 如果错误数量超过 50，发送告警
     if (errorCount > 50) {

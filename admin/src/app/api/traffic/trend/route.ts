@@ -109,7 +109,8 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const buckets = result.aggregations?.trend?.buckets || [];
+      const aggs = result.body?.aggregations;
+      const buckets = aggs?.trend?.buckets || [];
       const trendData = buckets.map((bucket: any) => ({
         time: bucket.key_as_string || new Date(bucket.key).toISOString(),
         timestamp: bucket.key,

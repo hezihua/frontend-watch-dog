@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const buckets = result.aggregations?.by_url?.buckets || [];
+      const aggs = result.body?.aggregations;
+      const buckets = aggs?.by_url?.buckets || [];
       const rank = buckets.map((bucket: any, index: number) => ({
         rank: index + 1,
         url: bucket.key,

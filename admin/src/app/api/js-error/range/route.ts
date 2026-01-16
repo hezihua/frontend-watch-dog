@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const aggs = result.aggregations;
+      const aggs = result.body?.aggregations;
 
       return NextResponse.json({
         code: 1000,
