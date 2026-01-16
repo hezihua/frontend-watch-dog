@@ -430,11 +430,12 @@ export async function queryTopAnalyse(params: QueryParams) {
               size: 10,
             },
           },
-          // Top 设备
+          // Top 设备 (使用 deviceModel，如果没有会显示空字符串)
           top_devices: {
             terms: {
-              field: 'deviceVendor',
+              field: 'deviceModel',
               size: 10,
+              missing: '桌面设备', // 如果字段缺失，使用默认值
             },
           },
         },
@@ -445,20 +446,20 @@ export async function queryTopAnalyse(params: QueryParams) {
 
     return {
       topPages: (aggs?.top_pages?.buckets || []).map((b: any) => ({
-        page: b.key,
+        page: b.key || '未知页面',
         pv: b.doc_count,
         uv: b.uv?.value || 0,
       })),
       topBrowsers: (aggs?.top_browsers?.buckets || []).map((b: any) => ({
-        name: b.key || 'Unknown',
+        name: b.key || '未知浏览器',
         count: b.doc_count,
       })),
       topOs: (aggs?.top_os?.buckets || []).map((b: any) => ({
-        name: b.key || 'Unknown',
+        name: b.key || '未知系统',
         count: b.doc_count,
       })),
       topDevices: (aggs?.top_devices?.buckets || []).map((b: any) => ({
-        name: b.key || 'Unknown',
+        name: b.key || '桌面设备',
         count: b.doc_count,
       })),
     };

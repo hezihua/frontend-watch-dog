@@ -47,22 +47,40 @@ export async function GET(request: NextRequest) {
       endTime: undefined,
     });
 
+    // 转换为前端期望的格式
     let data;
     switch (type) {
       case 'page':
-        data = result.topPages.map(p => ({ label: p.page, value: p.pv }));
+        data = result.topPages.map(p => ({ 
+          key: p.page, 
+          doc_count: p.pv,
+          uv: { value: p.uv }
+        }));
         break;
       case 'browser':
-        data = result.topBrowsers.map(b => ({ label: b.name, value: b.count }));
+        data = result.topBrowsers.map(b => ({ 
+          key: b.name, 
+          doc_count: b.count 
+        }));
         break;
       case 'device':
-        data = result.topDevices.map(d => ({ label: d.name || 'Unknown', value: d.count }));
+        data = result.topDevices.map(d => ({ 
+          key: d.name || '未知', 
+          doc_count: d.count 
+        }));
         break;
       case 'os':
-        data = result.topOs.map(o => ({ label: o.name, value: o.count }));
+        data = result.topOs.map(o => ({ 
+          key: o.name, 
+          doc_count: o.count 
+        }));
         break;
       default:
-        data = result.topPages.map(p => ({ label: p.page, value: p.pv }));
+        data = result.topPages.map(p => ({ 
+          key: p.page, 
+          doc_count: p.pv,
+          uv: { value: p.uv }
+        }));
     }
 
     return NextResponse.json({
