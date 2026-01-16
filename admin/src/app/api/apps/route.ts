@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { getUserAppsCache, cacheUserApps, clearUserAppsCache } from '@/services/cache';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 
@@ -35,10 +36,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 尝试从缓存获取
+    const cachedApps = await getUserAppsCache(userId);
+    if (cachedApps) {
+      return NextResponse.json({
+        code: 1000,
+        message: '成功',
+        data: cachedApps,
+      });
+    }
+
+    // 从数据库查询
     const apps = await prisma.app.findMany({
       where: { createId: userId },
       orderBy: { id: 'desc' },
     });
+
+    // 缓存结果
+    await cacheUserApps(userId, apps);
 
     return NextResponse.json({
       code: 1000,
@@ -87,6 +102,9 @@ export async function POST(request: NextRequest) {
         status: 1,
       },
     });
+
+    // 清除用户的应用列表缓存
+    await clearUserAppsCache(userId);
 
     return NextResponse.json({
       code: 1000,
