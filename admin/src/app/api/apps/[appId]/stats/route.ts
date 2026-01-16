@@ -72,6 +72,18 @@ export async function GET(
       },
     });
 
+    // 打印完整响应结构
+    console.log('🔍 ES 响应结构:', {
+      hasBody: !!userStatsResult.body,
+      hasAggregations: !!userStatsResult.aggregations,
+      bodyType: typeof userStatsResult.body,
+      keys: Object.keys(userStatsResult),
+    });
+    
+    // 尝试从 body 中获取 aggregations
+    const aggregations = userStatsResult.body?.aggregations || userStatsResult.aggregations;
+    console.log('🔍 aggregations:', aggregations);
+
     // 2. 新用户数（今天首次访问）
     const newUsersResult = await elasticsearch.search({
       index: MONITOR_INDEX,
@@ -140,11 +152,16 @@ export async function GET(
       },
     });
 
-    const allUsers = userStatsResult.aggregations?.total_users?.value || 0;
-    const activeUsers = userStatsResult.aggregations?.today_active_users?.count?.value || 0;
-    const newUsers = newUsersResult.aggregations?.new_users?.value || 0;
+    // Elasticsearch 7.x 客户端返回的数据在 body 中
+    const userAggs = userStatsResult.body?.aggregations || userStatsResult.aggregations;
+    const newUserAggs = newUsersResult.body?.aggregations || newUsersResult.aggregations;
+    const last7DaysAggs = last7DaysResult.body?.aggregations || last7DaysResult.aggregations;
+
+    const allUsers = userAggs?.total_users?.value || 0;
+    const activeUsers = userAggs?.today_active_users?.count?.value || 0;
+    const newUsers = newUserAggs?.new_users?.value || 0;
     
-    const dailyBuckets = last7DaysResult.aggregations?.daily_users?.buckets || [];
+    const dailyBuckets = last7DaysAggs?.daily_users?.buckets || [];
     const lastWeekActiveUers = dailyBuckets.map((bucket: any) => bucket.unique_users?.value || 0);
 
     const stats = {
@@ -153,6 +170,16 @@ export async function GET(
       newUsers,
       lastWeekActiveUers,
     };
+
+    // 调试日志
+    console.log('📊 统计查询结果:', {
+      appId,
+      todayStartMs,
+      allUsers,
+      activeUsers,
+      newUsers,
+      lastWeekActiveUers,
+    });
 
     return NextResponse.json({
       code: 1000,
