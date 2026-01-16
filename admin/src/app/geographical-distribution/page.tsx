@@ -58,10 +58,13 @@ export default function GeographicalDistributionPage() {
     }
   };
 
-  const totalPv = geoData.reduce((sum, item) => sum + item.doc_count, 0);
-  const totalUv = geoData.reduce((sum, item) => sum + (item.uv?.value || 0), 0);
+  // 确保 geoData 是数组
+  const safeGeoData = Array.isArray(geoData) ? geoData : [];
+  
+  const totalPv = safeGeoData.reduce((sum, item) => sum + item.doc_count, 0);
+  const totalUv = safeGeoData.reduce((sum, item) => sum + (item.uv?.value || 0), 0);
 
-  const tableData = geoData.map((item, index) => ({
+  const tableData = safeGeoData.map((item, index) => ({
     key: index,
     province: item.key || '未知',
     visitCount: item.doc_count,
@@ -153,7 +156,7 @@ export default function GeographicalDistributionPage() {
           <div>
             <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>覆盖省份</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#faad14' }}>
-              {geoData.length}
+              {safeGeoData.length}
             </div>
           </div>
         </div>
