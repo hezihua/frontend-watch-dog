@@ -8,10 +8,19 @@ export default function JsErrorPage() {
   const [apps, setApps] = useState<any[]>([]);
   const [activeApp, setActiveApp] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [errorList, setErrorList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     fetchApps();
   }, []);
+
+  useEffect(() => {
+    if (activeApp) {
+      fetchErrorList();
+    }
+  }, [activeApp]);
 
   const fetchApps = async () => {
     try {
@@ -28,32 +37,65 @@ export default function JsErrorPage() {
     }
   };
 
+  const fetchErrorList = async () => {
+    if (!activeApp) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/js-error/list?appId=${activeApp}`);
+      const data = await res.json();
+      if (data.code === 1000) {
+        setErrorList(data.data?.list || []);
+        setTotal(data.data?.total || 0);
+      } else {
+        message.error(data.message);
+      }
+    } catch (error) {
+      message.error('获取错误列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: '错误信息',
       dataIndex: 'message',
       key: 'message',
+      width: '40%',
+      ellipsis: true,
     },
     {
-      title: '错误类型',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => <Tag color="red">{type}</Tag>,
+      title: '文件',
+      dataIndex: 'filename',
+      key: 'filename',
+      width: '20%',
+      ellipsis: true,
+    },
+    {
+      title: '位置',
+      key: 'location',
+      width: '10%',
+      render: (_: any, record: any) => `${record.lineno}:${record.colno}`,
     },
     {
       title: '发生次数',
       dataIndex: 'count',
       key: 'count',
+      width: '10%',
+      sorter: (a: any, b: any) => a.count - b.count,
     },
     {
-      title: '影响用户数',
-      dataIndex: 'userCount',
-      key: 'userCount',
+      title: '最近发生',
+      dataIndex: 'lastErrorTime',
+      key: 'lastErrorTime',
+      width: '15%',
+      render: (time: string) => time ? new Date(time).toLocaleString('zh-CN') : '-',
     },
     {
       title: '操作',
       key: 'action',
-      render: () => <a>查看详情</a>,
+      width: '5%',
+      render: (_: any, record: any) => <a onClick={() => console.log('查看详情:', record)}>详情</a>,
     },
   ];
 
@@ -72,22 +114,29 @@ export default function JsErrorPage() {
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <Progress
             type="circle"
-            percent={100}
-            format={() => '健康'}
+            percent={total === 0 ? 100 : Math.max(0, 100 - Math.min(total, 100))}
+            format={(percent) => (total === 0 ? '健康' : `${percent}分`)}
             size={200}
-            strokeColor="#52c41a"
+            strokeColor={total === 0 ? '#52c41a' : total < 10 ? '#faad14' : '#ff4d4f'}
           />
           <div style={{ textAlign: 'center', marginTop: 20, color: '#999' }}>
-            暂无 JS 错误
+            {total === 0 ? '暂无 JS 错误' : `共发现 ${total} 个错误`}
           </div>
         </div>
       </Card>
 
-      <Card style={{ marginTop: 16 }} title="JS 错误列表">
+      <Card style={{ marginTop: 16 }} title={`JS 错误列表（共 ${total} 条）`}>
         <Table
           columns={columns}
-          dataSource={[]}
+          dataSource={errorList}
+          loading={loading}
           locale={{ emptyText: '暂无错误数据' }}
+          rowKey="id"
+          pagination={{
+            showTotal: (total) => `共 ${total} 条`,
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
         />
       </Card>
 

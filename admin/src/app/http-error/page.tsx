@@ -43,7 +43,8 @@ export default function HttpErrorPage() {
       const res = await fetch(`/api/http-error/list?appId=${activeApp}`);
       const data = await res.json();
       if (data.code === 1000) {
-        setErrorList(data.data);
+        // API 返回的数据结构是 { list, total, errorRate }
+        setErrorList(data.data?.list || []);
       } else {
         message.error(data.message);
       }
