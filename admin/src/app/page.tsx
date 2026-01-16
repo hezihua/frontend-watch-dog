@@ -6,6 +6,7 @@ import { PlusCircleFilled } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import AppItem from '@/components/AppItem';
 import MainLayout from '@/components/MainLayout';
+import { get, post } from '@/lib/request';
 
 interface AppInfo {
   id: number;
@@ -28,18 +29,11 @@ export default function Home() {
   // 获取应用列表
   const fetchApps = async () => {
     try {
-      const res = await fetch('/api/apps');
-      const data = await res.json();
+      const data = await get('/api/apps');
       
-      if (data.code === 1005) {
-        // 未登录，跳转到登录页
-        router.push('/login');
-        return;
-      }
-      
-      if (data.code === 1000) {
+      if (data && data.code === 1000) {
         setApps(data.data || []);
-      } else {
+      } else if (data) {
         message.error(data.message || '获取应用列表失败');
       }
     } catch (error) {
@@ -60,15 +54,9 @@ export default function Home() {
       setCreateLoading(true);
       
       const values = form.getFieldsValue();
-      const res = await fetch('/api/apps', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
+      const data = await post('/api/apps', values);
       
-      const data = await res.json();
-      
-      if (data.code === 1000) {
+      if (data && data.code === 1000) {
         Modal.success({
           title: '应用创建成功！',
           content: (
@@ -99,7 +87,7 @@ export default function Home() {
         setModalOpen(false);
         form.resetFields();
         fetchApps();
-      } else {
+      } else if (data) {
         message.error(data.message || '创建应用失败');
       }
     } catch (error) {

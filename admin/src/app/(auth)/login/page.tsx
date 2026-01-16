@@ -46,7 +46,15 @@ export default function LoginPage() {
 
       if (response.data.code === 1000) {
         message.success('登录成功');
-        router.push('/');
+        
+        // 检查是否有保存的跳转地址
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          router.push(redirectPath);
+        } else {
+          router.push('/');
+        }
         router.refresh();
       } else {
         message.error(response.data.message || '登录失败');

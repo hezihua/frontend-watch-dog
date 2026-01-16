@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, Table, Tag, message } from 'antd';
 import MainLayout from '@/components/MainLayout';
+import { get } from '@/lib/request';
 
 export default function HttpErrorPage() {
   const [apps, setApps] = useState<any[]>([]);
@@ -23,9 +24,8 @@ export default function HttpErrorPage() {
 
   const fetchApps = async () => {
     try {
-      const res = await fetch('/api/apps');
-      const data = await res.json();
-      if (data.code === 1000) {
+      const data = await get('/api/apps');
+      if (data && data.code === 1000) {
         setApps(data.data || []);
         if (data.data && data.data.length > 0) {
           setActiveApp(data.data[0].appId);
@@ -40,12 +40,11 @@ export default function HttpErrorPage() {
     if (!activeApp) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/http-error/list?appId=${activeApp}`);
-      const data = await res.json();
-      if (data.code === 1000) {
+      const data = await get(`/api/http-error/list?appId=${activeApp}`);
+      if (data && data.code === 1000) {
         // API 返回的数据结构是 { list, total, errorRate }
         setErrorList(data.data?.list || []);
-      } else {
+      } else if (data) {
         message.error(data.message);
       }
     } catch (error) {
