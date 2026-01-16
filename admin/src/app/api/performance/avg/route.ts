@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { queryPerformanceStats } from '@/services/monitor-query';
 
 // GET - 获取应用平均性能指标
 export async function GET(request: NextRequest) {
@@ -15,6 +16,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const appId = searchParams.get('appId');
+    const startTime = searchParams.get('startTime');
+    const endTime = searchParams.get('endTime');
 
     if (!appId) {
       return NextResponse.json(
@@ -38,14 +41,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: 从 Elasticsearch 或数据库获取真实性能数据
-    // 目前返回模拟数据
+    // 从 Elasticsearch 获取真实性能数据
+    const stats = await queryPerformanceStats({
+      appId,
+      startTime: startTime ? new Date(startTime) : undefined,
+      endTime: endTime ? new Date(endTime) : undefined,
+    });
+
     const performanceData = {
-      fcp: Math.floor(Math.random() * 1000 + 500),  // First Contentful Paint
-      lcp: Math.floor(Math.random() * 2000 + 1000), // Largest Contentful Paint
-      fid: Math.floor(Math.random() * 100 + 50),    // First Input Delay
-      ttfb: Math.floor(Math.random() * 500 + 200),  // Time to First Byte
-      cls: (Math.random() * 0.1).toFixed(3),        // Cumulative Layout Shift
+      fcp: Math.round(stats.avgFcp * 100) / 100,  // First Contentful Paint
+      lcp: Math.round(stats.avgLcp * 100) / 100, // Largest Contentful Paint
+      fid: Math.round(stats.avgFid * 100) / 100,    // First Input Delay
+      ttfb: Math.round(stats.avgTtfb * 100) / 100,  // Time to First Byte
+      dnsTime: Math.round(stats.avgDns * 100) / 100,
+      tcpTime: Math.round(stats.avgTcp * 100) / 100,
+      whiteTime: Math.round(stats.avgWhiteTime * 100) / 100,
     };
 
     return NextResponse.json({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { queryTopAnalyse } from '@/services/monitor-query';
 
 // GET - 获取 Top 分析数据
 export async function GET(request: NextRequest) {
@@ -39,31 +40,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: 从 Elasticsearch 或数据库获取真实 Top 数据
-    // 目前返回模拟数据
-    const generateTopData = (names: string[]) => {
-      return names.map((name, index) => ({
-        label: name,
-        value: Math.floor(Math.random() * 1000 + 100 * (names.length - index)),
-      }));
-    };
+    // 从 Elasticsearch 获取真实 Top 数据
+    const result = await queryTopAnalyse({
+      appId,
+      startTime: undefined,
+      endTime: undefined,
+    });
 
     let data;
     switch (type) {
       case 'page':
-        data = generateTopData(['/home', '/product', '/about', '/contact', '/blog']);
+        data = result.topPages.map(p => ({ label: p.page, value: p.pv }));
         break;
       case 'browser':
-        data = generateTopData(['Chrome', 'Safari', 'Firefox', 'Edge', 'Opera']);
+        data = result.topBrowsers.map(b => ({ label: b.name, value: b.count }));
         break;
       case 'device':
-        data = generateTopData(['Desktop', 'Mobile', 'Tablet', 'Unknown']);
+        data = result.topDevices.map(d => ({ label: d.name || 'Unknown', value: d.count }));
         break;
       case 'os':
-        data = generateTopData(['Windows', 'macOS', 'iOS', 'Android', 'Linux']);
+        data = result.topOs.map(o => ({ label: o.name, value: o.count }));
         break;
       default:
-        data = generateTopData(['/home', '/product', '/about']);
+        data = result.topPages.map(p => ({ label: p.page, value: p.pv }));
     }
 
     return NextResponse.json({

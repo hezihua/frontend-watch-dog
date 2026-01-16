@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { queryGeoDistribution } from '@/services/monitor-query';
 
 // GET - 获取地域分布数据
 export async function GET(request: NextRequest) {
@@ -38,20 +39,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: 从数据库获取真实地域分布数据
-    // 目前返回模拟数据
-    const cities = [
-      { province: '广东省', city: '深圳市', visitCount: 1234, userCount: 567, ratio: 23.5 },
-      { province: '广东省', city: '广州市', visitCount: 987, userCount: 432, ratio: 18.7 },
-      { province: '北京市', city: '北京市', visitCount: 876, userCount: 389, ratio: 16.6 },
-      { province: '上海市', city: '上海市', visitCount: 765, userCount: 345, ratio: 14.5 },
-      { province: '浙江省', city: '杭州市', visitCount: 654, userCount: 289, ratio: 12.4 },
-    ];
+    // 从 Elasticsearch 获取真实地域分布数据
+    const result = await queryGeoDistribution({
+      appId,
+      startTime: undefined,
+      endTime: undefined,
+    });
+
+    const totalVisits = result.cities.reduce((sum, city) => sum + city.pv, 0);
+    
+    const cities = result.cities.map((city) => ({
+      city: city.name,
+      visitCount: city.pv,
+      userCount: city.uv,
+      ratio: totalVisits > 0 ? ((city.pv / totalVisits) * 100).toFixed(2) : '0',
+    }));
 
     return NextResponse.json({
       code: 1000,
       message: '成功',
-      data: cities,
+      data: {
+        cities,
+        provinces: result.provinces,
+      },
     });
   } catch (error) {
     console.error('获取地域分布数据失败:', error);

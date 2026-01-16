@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { queryHttpErrors } from '@/services/monitor-query';
 
 // GET - 获取 HTTP 错误列表
 export async function GET(request: NextRequest) {
@@ -38,31 +39,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: 从 Elasticsearch 或数据库获取真实 HTTP 错误数据
-    // 目前返回模拟数据
-    const errors = [
-      {
-        id: 1,
-        url: '/api/user/info',
-        method: 'GET',
-        errorCount: Math.floor(Math.random() * 100 + 10),
-        errorRate: (Math.random() * 10).toFixed(2),
-        statusCode: 500,
-      },
-      {
-        id: 2,
-        url: '/api/product/list',
-        method: 'POST',
-        errorCount: Math.floor(Math.random() * 50 + 5),
-        errorRate: (Math.random() * 5).toFixed(2),
-        statusCode: 404,
-      },
-    ];
+    // 从 Elasticsearch 获取真实 HTTP 错误数据
+    const result = await queryHttpErrors({
+      appId,
+      startTime: undefined,
+      endTime: undefined,
+      size: 50,
+    });
 
     return NextResponse.json({
       code: 1000,
       message: '成功',
-      data: errors,
+      data: {
+        list: result.errors,
+        total: result.total,
+        errorRate: result.errorRate,
+      },
     });
   } catch (error) {
     console.error('获取 HTTP 错误列表失败:', error);

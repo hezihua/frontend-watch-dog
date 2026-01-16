@@ -38,28 +38,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: 从 Elasticsearch 或数据库获取真实页面性能数据
-    // 目前返回模拟数据
-    const pages = [
-      {
-        id: 1,
-        url: '/home',
-        fcp: Math.floor(Math.random() * 1000 + 500),
-        lcp: Math.floor(Math.random() * 2000 + 1000),
-        fid: Math.floor(Math.random() * 100 + 50),
-        ttfb: Math.floor(Math.random() * 500 + 200),
-        sampleCount: Math.floor(Math.random() * 1000 + 100),
-      },
-      {
-        id: 2,
-        url: '/product/detail',
-        fcp: Math.floor(Math.random() * 1000 + 500),
-        lcp: Math.floor(Math.random() * 2000 + 1000),
-        fid: Math.floor(Math.random() * 100 + 50),
-        ttfb: Math.floor(Math.random() * 500 + 200),
-        sampleCount: Math.floor(Math.random() * 1000 + 100),
-      },
-    ];
+    // 从 Elasticsearch 获取真实页面性能数据
+    const { queryPerformanceStats } = await import('@/services/monitor-query');
+    
+    const stats = await queryPerformanceStats({
+      appId,
+      startTime: undefined,
+      endTime: undefined,
+    });
+
+    const pages = stats.byPage.map((page: any, index: number) => ({
+      id: index + 1,
+      url: page.key,
+      fcp: Math.round((page.avg_fcp?.value || 0) * 100) / 100,
+      lcp: Math.round((page.avg_lcp?.value || 0) * 100) / 100,
+      ttfb: Math.round((page.avg_ttfb?.value || 0) * 100) / 100,
+      sampleCount: page.doc_count,
+    }));
 
     return NextResponse.json({
       code: 1000,

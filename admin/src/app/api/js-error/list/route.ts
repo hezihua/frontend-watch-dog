@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { queryJsErrors } from '@/services/monitor-query';
 
 // GET - 获取 JS 错误列表
 export async function GET(request: NextRequest) {
@@ -38,31 +39,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: 从 Elasticsearch 或数据库获取真实 JS 错误数据
-    // 目前返回模拟数据
-    const errors = [
-      {
-        id: 1,
-        message: 'Cannot read property of undefined',
-        type: 'TypeError',
-        count: Math.floor(Math.random() * 50 + 5),
-        userCount: Math.floor(Math.random() * 30 + 3),
-        stack: 'at App.tsx:123:45',
-      },
-      {
-        id: 2,
-        message: 'Network request failed',
-        type: 'NetworkError',
-        count: Math.floor(Math.random() * 20 + 2),
-        userCount: Math.floor(Math.random() * 15 + 2),
-        stack: 'at api.ts:67:12',
-      },
-    ];
+    // 从 Elasticsearch 获取真实 JS 错误数据
+    const result = await queryJsErrors({
+      appId,
+      startTime: undefined,
+      endTime: undefined,
+      size: 50,
+    });
 
     return NextResponse.json({
       code: 1000,
       message: '成功',
-      data: errors,
+      data: {
+        list: result.errors,
+        total: result.total,
+      },
     });
   } catch (error) {
     console.error('获取 JS 错误列表失败:', error);
