@@ -39,6 +39,11 @@ export async function GET(
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const last7DaysStart = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000);
 
+    // 使用毫秒时间戳（而不是 ISO 字符串）
+    const todayStartMs = todayStart.getTime();
+    const last7DaysStartMs = last7DaysStart.getTime();
+    const nowMs = now.getTime();
+
     // 1. 总用户数和今日活跃用户
     const userStatsResult = await elasticsearch.search({
       index: MONITOR_INDEX,
@@ -54,7 +59,7 @@ export async function GET(
           today_active_users: {
             filter: {
               range: {
-                userTimeStamp: { gte: todayStart.toISOString() },
+                userTimeStamp: { gte: todayStartMs },
               },
             },
             aggs: {
@@ -79,7 +84,7 @@ export async function GET(
               { term: { isFirst: true } },
               {
                 range: {
-                  userTimeStamp: { gte: todayStart.toISOString() },
+                  userTimeStamp: { gte: todayStartMs },
                 },
               },
             ],
@@ -105,8 +110,8 @@ export async function GET(
               {
                 range: {
                   userTimeStamp: {
-                    gte: last7DaysStart.toISOString(),
-                    lte: now.toISOString(),
+                    gte: last7DaysStartMs,
+                    lte: nowMs,
                   },
                 },
               },
@@ -121,8 +126,8 @@ export async function GET(
               time_zone: '+08:00',
               min_doc_count: 0,
               extended_bounds: {
-                min: last7DaysStart.toISOString(),
-                max: now.toISOString(),
+                min: last7DaysStartMs,
+                max: nowMs,
               },
             },
             aggs: {
