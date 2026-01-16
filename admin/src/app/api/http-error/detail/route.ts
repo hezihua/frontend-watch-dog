@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
       must.push({
         range: {
           userTimeStamp: {
-            gte: new Date(startTime).toISOString(),
-            lte: new Date(endTime).toISOString(),
+            gte: new Date(startTime).getTime(),
+            lte: new Date(endTime).getTime(),
           },
         },
       });
@@ -102,11 +102,12 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const total = typeof result.hits.total === 'number' 
-        ? result.hits.total 
-        : result.hits.total?.value || 0;
+      const hits = result.body?.hits || result.hits;
+      const total = typeof hits.total === 'number' 
+        ? hits.total 
+        : hits.total?.value || 0;
 
-      const list = result.hits.hits.map((hit: any) => ({
+      const list = hits.hits.map((hit: any) => ({
         id: hit._id,
         ...hit._source,
         cost: Math.round((hit._source.cost || 0) * 100) / 100,
