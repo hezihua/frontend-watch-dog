@@ -3,7 +3,7 @@
  * 提供统一的缓存接口
  */
 
-import redis from '@/lib/redis';
+import { redis } from '@/lib/redis';
 
 // 缓存键前缀
 const PREFIX = {
