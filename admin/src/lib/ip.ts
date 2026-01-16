@@ -40,15 +40,25 @@ export function getIpAddress(ip: string): {
   // 2. ip2region（中国 IP 数据）
   // 3. 淘宝 IP 地址库 API
 
-  if (ip === 'unknown' || ip === '127.0.0.1' || ip.startsWith('192.168.')) {
+  // 处理本地 IP（IPv4 和 IPv6）
+  if (
+    ip === 'unknown' || 
+    ip === '127.0.0.1' || 
+    ip === '::1' || 
+    ip === '::ffff:127.0.0.1' ||
+    ip.startsWith('192.168.') ||
+    ip.startsWith('10.') ||
+    ip.startsWith('172.16.')
+  ) {
     return {
-      province: '本地',
+      province: '北京',  // 测试环境使用默认地域
       country: '中国',
-      city: '本地',
+      city: '北京',
     };
   }
 
   // TODO: 实际的 IP 地址解析逻辑
+  // 推荐使用 ip2region 或 GeoIP2 库
   return {
     province: '未知',
     country: '未知',
