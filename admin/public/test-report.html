@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDK 数据上报测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #1890ff;
+      padding-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    textarea {
+      min-height: 200px;
+      font-family: 'Courier New', monospace;
+    }
+    button {
+      background: #1890ff;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #40a9ff;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      display: none;
+    }
+    .result.success {
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      color: #52c41a;
+    }
+    .result.error {
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      color: #ff4d4f;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 SDK 数据上报测试工具</h1>
+    
+    <div class="form-group">
+      <label for="reportUrl">上报地址:</label>
+      <input type="text" id="reportUrl" value="http://localhost:3000/api/report" placeholder="http://localhost:3000/api/report">
+    </div>
+
+    <div class="form-group">
+      <label for="appId">应用 ID:</label>
+      <input type="text" id="appId" placeholder="请输入您创建的应用 appId">
+    </div>
+
+    <div class="form-group">
+      <label for="testData">测试数据 (JSON 数组):</label>
+      <textarea id="testData">[
+  {
+    "type": "performance",
+    "domain": "localhost",
+    "pageUrl": "http://localhost:3000/test",
+    "isFirst": true,
+    "dnsTime": 12.5,
+    "tcpTime": 25.3,
+    "whiteTime": 156.8,
+    "fcp": 245.6,
+    "ttfb": 89.2,
+    "lcp": 456.3,
+    "fid": 12.4,
+    "resources": [],
+    "userTimeStamp": ${Date.now()},
+    "markUserId": "test-user-${Math.random().toString(36).substr(2, 9)}",
+    "userId": "test-user-001",
+    "appId": "placeholder"
+  },
+  {
+    "type": "request",
+    "domain": "localhost",
+    "pageUrl": "http://localhost:3000/test",
+    "url": "/api/user/info",
+    "method": "GET",
+    "reqHeaders": "{}",
+    "reqBody": "",
+    "status": 200,
+    "requestType": "done",
+    "cost": 125.6,
+    "userTimeStamp": ${Date.now()},
+    "markUserId": "test-user-${Math.random().toString(36).substr(2, 9)}",
+    "userId": "test-user-001",
+    "appId": "placeholder"
+  }
+]</textarea>
+    </div>
+
+    <button onclick="sendReport()">🚀 发送测试数据</button>
+    <button onclick="generateSampleData()">🎲 生成随机数据</button>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    function generateSampleData() {
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substr(2, 9);
+      
+      const sampleData = [
+        {
+          type: "performance",
+          domain: "localhost",
+          pageUrl: "http://localhost:3000/test",
+          isFirst: true,
+          dnsTime: Math.random() * 50,
+          tcpTime: Math.random() * 100,
+          whiteTime: Math.random() * 500 + 100,
+          fcp: Math.random() * 1000 + 100,
+          ttfb: Math.random() * 200 + 50,
+          lcp: Math.random() * 2000 + 200,
+          fid: Math.random() * 50,
+          resources: [],
+          userTimeStamp: timestamp,
+          markUserId: `test-user-${randomId}`,
+          userId: "test-user-001",
+          appId: "placeholder"
+        },
+        {
+          type: "jsError",
+          domain: "localhost",
+          pageUrl: "http://localhost:3000/test",
+          message: "Uncaught TypeError: Cannot read property 'xxx' of undefined",
+          colno: 15,
+          lineno: 42,
+          stack: "Error: test error\\n    at Object.test (test.js:42:15)",
+          filename: "test.js",
+          userTimeStamp: timestamp,
+          markUserId: `test-user-${randomId}`,
+          userId: "test-user-001",
+          appId: "placeholder"
+        }
+      ];
+      
+      document.getElementById('testData').value = JSON.stringify(sampleData, null, 2);
+    }
+
+    async function sendReport() {
+      const reportUrl = document.getElementById('reportUrl').value;
+      const appId = document.getElementById('appId').value;
+      const testDataStr = document.getElementById('testData').value;
+      const resultDiv = document.getElementById('result');
+
+      if (!appId) {
+        showResult('error', '请输入应用 ID');
+        return;
+      }
+
+      if (!reportUrl) {
+        showResult('error', '请输入上报地址');
+        return;
+      }
+
+      let testData;
+      try {
+        testData = JSON.parse(testDataStr);
+        // 替换 appId
+        testData = testData.map(item => ({...item, appId}));
+      } catch (e) {
+        showResult('error', '测试数据格式错误：' + e.message);
+        return;
+      }
+
+      try {
+        const url = `${reportUrl}?appId=${encodeURIComponent(appId)}&data=${encodeURIComponent(JSON.stringify(testData))}`;
+        
+        showResult('info', '正在发送数据...');
+        
+        const response = await fetch(url, {
+          method: 'GET',
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.code === 1000) {
+          showResult('success', `✅ 数据上报成功！<br><pre>${JSON.stringify(result, null, 2)}</pre>`);
+        } else {
+          showResult('error', `❌ 数据上报失败：${result.message || '未知错误'}<br><pre>${JSON.stringify(result, null, 2)}</pre>`);
+        }
+      } catch (error) {
+        showResult('error', `❌ 请求失败：${error.message}<br><br>请确保：<br>1. Next.js 服务已启动 (pnpm dev)<br>2. Docker 服务已启动 (Elasticsearch)<br>3. 应用 ID 正确且已启用`);
+      }
+    }
+
+    function showResult(type, message) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = 'result ' + type;
+      resultDiv.innerHTML = message;
+      resultDiv.style.display = 'block';
+    }
+
+    // 页面加载时生成示例数据
+    window.onload = function() {
+      generateSampleData();
+    };
+  </script>
+</body>
+</html>
