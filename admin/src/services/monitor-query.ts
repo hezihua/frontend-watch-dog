@@ -148,10 +148,10 @@ export async function queryPerformanceStats(params: QueryParams) {
           avg_dns: { avg: { field: 'dnsTime' } },
           avg_tcp: { avg: { field: 'tcpTime' } },
           avg_white_time: { avg: { field: 'whiteTime' } },
-          // 按页面分组
+          // 按页面分组（使用 keyword 子字段）
           by_page: {
             terms: {
-              field: 'pageUrl',
+              field: 'pageUrl.keyword',
               size: 10,
             },
             aggs: {
@@ -165,6 +165,15 @@ export async function queryPerformanceStats(params: QueryParams) {
     });
 
     const aggs = result.body?.aggregations;
+    
+    // 调试日志
+    console.log('🔍 性能查询 ES 响应:', {
+      hasBody: !!result.body,
+      hasAggregations: !!aggs,
+      aggregations: aggs,
+      hits: result.body?.hits?.total,
+    });
+    
     return {
       avgFcp: aggs?.avg_fcp?.value || 0,
       avgLcp: aggs?.avg_lcp?.value || 0,
@@ -221,7 +230,7 @@ export async function queryHttpErrors(params: QueryParams) {
         aggs: {
           by_url: {
             terms: {
-              field: 'url',
+              field: 'url.keyword',
               size,
             },
             aggs: {
@@ -398,7 +407,7 @@ export async function queryTopAnalyse(params: QueryParams) {
           // Top 页面
           top_pages: {
             terms: {
-              field: 'pageUrl',
+              field: 'pageUrl.keyword',
               size: 10,
             },
             aggs: {

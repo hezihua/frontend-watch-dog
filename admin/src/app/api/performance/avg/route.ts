@@ -48,6 +48,8 @@ export async function GET(request: NextRequest) {
       endTime: endTime ? new Date(endTime) : undefined,
     });
 
+    console.log('📊 性能查询结果:', { appId, startTime, endTime, stats });
+
     const performanceData = {
       fcp: Math.round(stats.avgFcp * 100) / 100,  // First Contentful Paint
       lcp: Math.round(stats.avgLcp * 100) / 100, // Largest Contentful Paint
