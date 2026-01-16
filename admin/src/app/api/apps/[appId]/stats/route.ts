@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import { elasticsearch } from '@/lib/elasticsearch';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
+const MONITOR_INDEX = 'frontend-monitor';
 
 function getUserIdFromToken(request: NextRequest): number | null {
   try {
@@ -15,7 +17,7 @@ function getUserIdFromToken(request: NextRequest): number | null {
   }
 }
 
-// GET - 获取应用统计数据（模拟数据，后续可以对接真实数据源）
+// GET - 获取应用统计数据
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ appId: string }> }
@@ -32,13 +34,119 @@ export async function GET(
 
     const { appId } = await params;
 
-    // TODO: 对接真实的数据统计逻辑
-    // 这里返回模拟数据
+    // 查询真实数据
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const last7DaysStart = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000);
+
+    // 1. 总用户数和今日活跃用户
+    const userStatsResult = await elasticsearch.search({
+      index: MONITOR_INDEX,
+      body: {
+        size: 0,
+        query: {
+          term: { appId },
+        },
+        aggs: {
+          total_users: {
+            cardinality: { field: 'markUserId' },
+          },
+          today_active_users: {
+            filter: {
+              range: {
+                userTimeStamp: { gte: todayStart.toISOString() },
+              },
+            },
+            aggs: {
+              count: {
+                cardinality: { field: 'markUserId' },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 2. 新用户数（今天首次访问）
+    const newUsersResult = await elasticsearch.search({
+      index: MONITOR_INDEX,
+      body: {
+        size: 0,
+        query: {
+          bool: {
+            must: [
+              { term: { appId } },
+              { term: { isFirst: true } },
+              {
+                range: {
+                  userTimeStamp: { gte: todayStart.toISOString() },
+                },
+              },
+            ],
+          },
+        },
+        aggs: {
+          new_users: {
+            cardinality: { field: 'markUserId' },
+          },
+        },
+      },
+    });
+
+    // 3. 最近7天每天的活跃用户数
+    const last7DaysResult = await elasticsearch.search({
+      index: MONITOR_INDEX,
+      body: {
+        size: 0,
+        query: {
+          bool: {
+            must: [
+              { term: { appId } },
+              {
+                range: {
+                  userTimeStamp: {
+                    gte: last7DaysStart.toISOString(),
+                    lte: now.toISOString(),
+                  },
+                },
+              },
+            ],
+          },
+        },
+        aggs: {
+          daily_users: {
+            date_histogram: {
+              field: 'userTimeStamp',
+              calendar_interval: 'day',
+              time_zone: '+08:00',
+              min_doc_count: 0,
+              extended_bounds: {
+                min: last7DaysStart.toISOString(),
+                max: now.toISOString(),
+              },
+            },
+            aggs: {
+              unique_users: {
+                cardinality: { field: 'markUserId' },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const allUsers = userStatsResult.aggregations?.total_users?.value || 0;
+    const activeUsers = userStatsResult.aggregations?.today_active_users?.count?.value || 0;
+    const newUsers = newUsersResult.aggregations?.new_users?.value || 0;
+    
+    const dailyBuckets = last7DaysResult.aggregations?.daily_users?.buckets || [];
+    const lastWeekActiveUers = dailyBuckets.map((bucket: any) => bucket.unique_users?.value || 0);
+
     const stats = {
-      activeUsers: Math.floor(Math.random() * 1000),
-      allUsers: Math.floor(Math.random() * 5000) + 1000,
-      newUsers: Math.floor(Math.random() * 200),
-      lastWeekActiveUers: Array.from({ length: 7 }, () => Math.floor(Math.random() * 500)),
+      activeUsers,
+      allUsers,
+      newUsers,
+      lastWeekActiveUers,
     };
 
     return NextResponse.json({
