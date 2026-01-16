@@ -235,7 +235,7 @@ export async function queryHttpErrors(params: QueryParams) {
             },
             aggs: {
               error_count: {
-                value_count: { field: 'url' },
+                value_count: { field: 'url.keyword' },
               },
               avg_cost: {
                 avg: { field: 'cost' },
@@ -253,7 +253,7 @@ export async function queryHttpErrors(params: QueryParams) {
             },
           },
           total_errors: {
-            value_count: { field: 'url' },
+            value_count: { field: 'url.keyword' },
           },
           total_requests: {
             filter: {
