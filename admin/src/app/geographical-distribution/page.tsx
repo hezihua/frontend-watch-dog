@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { Card, Table, message, Progress } from 'antd';
+import dynamic from 'next/dynamic';
 import MainLayout from '@/components/MainLayout';
 import { get } from '@/lib/request';
+
+// 动态导入地图组件（避免 SSR 问题）
+const ChinaMap = dynamic(() => import('@/components/ChinaMap'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      加载地图中...
+    </div>
+  ),
+});
 
 interface GeoData {
   key: string;
@@ -163,15 +174,13 @@ export default function GeographicalDistributionPage() {
       </Card>
 
       <Card title="中国地图分布">
-        <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
-            <div>地图可视化功能</div>
-            <div style={{ fontSize: 12, marginTop: 8 }}>
-              可集成 ECharts 实现中国地图热力图
-            </div>
-          </div>
-        </div>
+        <ChinaMap 
+          data={safeGeoData.map(item => ({
+            name: item.key,
+            value: item.doc_count,
+          }))}
+          height={500}
+        />
       </Card>
 
       <Card style={{ marginTop: 16 }} title="地域详细数据">
