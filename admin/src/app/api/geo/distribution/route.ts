@@ -46,22 +46,19 @@ export async function GET(request: NextRequest) {
       endTime: undefined,
     });
 
-    const totalVisits = result.cities.reduce((sum, city) => sum + city.pv, 0);
-    
-    const cities = result.cities.map((city) => ({
-      city: city.name,
-      visitCount: city.pv,
-      userCount: city.uv,
-      ratio: totalVisits > 0 ? ((city.pv / totalVisits) * 100).toFixed(2) : '0',
+    // 转换为前端期望的格式: { key, doc_count, uv }
+    const data = result.provinces.map((province) => ({
+      key: province.name,
+      doc_count: province.pv,
+      uv: {
+        value: province.uv,
+      },
     }));
 
     return NextResponse.json({
       code: 1000,
       message: '成功',
-      data: {
-        cities,
-        provinces: result.provinces,
-      },
+      data,
     });
   } catch (error) {
     console.error('获取地域分布数据失败:', error);
