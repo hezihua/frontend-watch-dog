@@ -25,11 +25,11 @@ export async function queryTrafficStats(params: QueryParams) {
 
   const must: any[] = [{ term: { appId } }];
 
-  // 添加时间范围过滤
+  // 添加时间范围过滤（使用毫秒时间戳）
   if (startTime || endTime) {
     const timeRange: any = {};
-    if (startTime) timeRange.gte = startTime.toISOString();
-    if (endTime) timeRange.lte = endTime.toISOString();
+    if (startTime) timeRange.gte = startTime.getTime();
+    if (endTime) timeRange.lte = endTime.getTime();
     must.push({ range: { userTimeStamp: timeRange } });
   }
 
@@ -95,11 +95,14 @@ export async function queryTrafficStats(params: QueryParams) {
       },
     });
 
+    // Elasticsearch 7.x 客户端返回的数据在 body 中
+    const aggs = result.body?.aggregations || result.aggregations;
+    
     return {
-      pv: result.aggregations?.pv?.doc_count || 0,
-      uv: result.aggregations?.uv?.value || 0,
-      newUsers: result.aggregations?.new_users?.count?.value || 0,
-      trend: result.aggregations?.trend_by_hour?.buckets || [],
+      pv: aggs?.pv?.doc_count || 0,
+      uv: aggs?.uv?.value || 0,
+      newUsers: aggs?.new_users?.count?.value || 0,
+      trend: aggs?.trend_by_hour?.buckets || [],
     };
   } catch (error) {
     console.error('查询流量统计失败:', error);
@@ -120,8 +123,8 @@ export async function queryPerformanceStats(params: QueryParams) {
 
   if (startTime || endTime) {
     const timeRange: any = {};
-    if (startTime) timeRange.gte = startTime.toISOString();
-    if (endTime) timeRange.lte = endTime.toISOString();
+    if (startTime) timeRange.gte = startTime.getTime();
+    if (endTime) timeRange.lte = endTime.getTime();
     must.push({ range: { userTimeStamp: timeRange } });
   }
 
@@ -161,7 +164,7 @@ export async function queryPerformanceStats(params: QueryParams) {
       },
     });
 
-    const aggs = result.aggregations;
+    const aggs = result.body?.aggregations;
     return {
       avgFcp: aggs?.avg_fcp?.value || 0,
       avgLcp: aggs?.avg_lcp?.value || 0,
@@ -201,8 +204,8 @@ export async function queryHttpErrors(params: QueryParams) {
 
   if (startTime || endTime) {
     const timeRange: any = {};
-    if (startTime) timeRange.gte = startTime.toISOString();
-    if (endTime) timeRange.lte = endTime.toISOString();
+    if (startTime) timeRange.gte = startTime.getTime();
+    if (endTime) timeRange.lte = endTime.getTime();
     must.push({ range: { userTimeStamp: timeRange } });
   }
 
@@ -257,9 +260,9 @@ export async function queryHttpErrors(params: QueryParams) {
       },
     });
 
-    const buckets = result.aggregations?.by_url?.buckets || [];
-    const totalErrors = result.aggregations?.total_errors?.value || 0;
-    const totalRequests = result.aggregations?.total_requests?.doc_count || 1;
+    const buckets = (result.body?.aggregations || result.aggregations)?.by_url?.buckets || [];
+    const totalErrors = (result.body?.aggregations || result.aggregations)?.total_errors?.value || 0;
+    const totalRequests = (result.body?.aggregations || result.aggregations)?.total_requests?.doc_count || 1;
     const errorRate = ((totalErrors / totalRequests) * 100).toFixed(2);
 
     const errors = buckets.map((bucket: any, index: number) => {
@@ -300,8 +303,8 @@ export async function queryJsErrors(params: QueryParams) {
 
   if (startTime || endTime) {
     const timeRange: any = {};
-    if (startTime) timeRange.gte = startTime.toISOString();
-    if (endTime) timeRange.lte = endTime.toISOString();
+    if (startTime) timeRange.gte = startTime.getTime();
+    if (endTime) timeRange.lte = endTime.getTime();
     must.push({ range: { userTimeStamp: timeRange } });
   }
 
@@ -340,8 +343,8 @@ export async function queryJsErrors(params: QueryParams) {
       },
     });
 
-    const buckets = result.aggregations?.by_message?.buckets || [];
-    const totalErrors = result.aggregations?.total_errors?.value || 0;
+    const buckets = (result.body?.aggregations || result.aggregations)?.by_message?.buckets || [];
+    const totalErrors = (result.body?.aggregations || result.aggregations)?.total_errors?.value || 0;
 
     const errors = buckets.map((bucket: any, index: number) => {
       const latest = bucket.latest?.hits?.hits?.[0]?._source || {};
@@ -378,8 +381,8 @@ export async function queryTopAnalyse(params: QueryParams) {
 
   if (startTime || endTime) {
     const timeRange: any = {};
-    if (startTime) timeRange.gte = startTime.toISOString();
-    if (endTime) timeRange.lte = endTime.toISOString();
+    if (startTime) timeRange.gte = startTime.getTime();
+    if (endTime) timeRange.lte = endTime.getTime();
     must.push({ range: { userTimeStamp: timeRange } });
   }
 
@@ -429,7 +432,7 @@ export async function queryTopAnalyse(params: QueryParams) {
       },
     });
 
-    const aggs = result.aggregations;
+    const aggs = result.body?.aggregations;
 
     return {
       topPages: (aggs?.top_pages?.buckets || []).map((b: any) => ({
@@ -471,8 +474,8 @@ export async function queryGeoDistribution(params: QueryParams) {
 
   if (startTime || endTime) {
     const timeRange: any = {};
-    if (startTime) timeRange.gte = startTime.toISOString();
-    if (endTime) timeRange.lte = endTime.toISOString();
+    if (startTime) timeRange.gte = startTime.getTime();
+    if (endTime) timeRange.lte = endTime.getTime();
     must.push({ range: { userTimeStamp: timeRange } });
   }
 
@@ -513,7 +516,7 @@ export async function queryGeoDistribution(params: QueryParams) {
       },
     });
 
-    const aggs = result.aggregations;
+    const aggs = result.body?.aggregations;
 
     return {
       provinces: (aggs?.by_province?.buckets || []).map((b: any) => ({
