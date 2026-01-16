@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>接口数据测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #1890ff;
+      padding-bottom: 10px;
+    }
+    button {
+      background: #1890ff;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 0;
+      width: 100%;
+    }
+    button:hover {
+      background: #40a9ff;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      background: #f0f0f0;
+    }
+    .success {
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      color: #52c41a;
+    }
+    .error {
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      color: #ff4d4f;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔌 接口数据上报测试</h1>
+    <p>点击下面按钮上报不同类型的接口数据：</p>
+    
+    <button onclick="reportSuccess()">✅ 上报成功接口 (status: 200)</button>
+    <button onclick="reportError404()">❌ 上报 404 错误</button>
+    <button onclick="reportError500()">❌ 上报 500 错误</button>
+    <button onclick="reportSlowRequest()">🐌 上报慢接口</button>
+    <button onclick="reportBatch()">📦 批量上报 10 条数据</button>
+    
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const APP_ID = 'kvq0fslb1768400649714'; // 您的应用 ID
+    
+    function generateUserId() {
+      return `test-user-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    
+    async function sendData(data) {
+      const url = `http://localhost:3000/api/report?appId=${APP_ID}&data=${encodeURIComponent(JSON.stringify(data))}`;
+      try {
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result.code === 1000) {
+          showResult('success', '✅ 数据上报成功！');
+        } else {
+          showResult('error', `❌ 上报失败：${result.message}`);
+        }
+      } catch (error) {
+        showResult('error', `❌ 请求失败：${error.message}`);
+      }
+    }
+    
+    function reportSuccess() {
+      const data = [{
+        type: 'request',
+        domain: 'api.example.com',
+        pageUrl: 'http://localhost:3000/test',
+        url: '/api/user/profile',
+        method: 'GET',
+        reqHeaders: '{"Content-Type":"application/json"}',
+        reqBody: '',
+        status: 200,
+        requestType: 'done',
+        cost: 156.5,
+        userTimeStamp: Date.now(),
+        markUserId: generateUserId(),
+        userId: 'test-user-001',
+        appId: APP_ID
+      }];
+      sendData(data);
+    }
+    
+    function reportError404() {
+      const data = [{
+        type: 'request',
+        domain: 'api.example.com',
+        pageUrl: 'http://localhost:3000/test',
+        url: '/api/user/notfound',
+        method: 'GET',
+        reqHeaders: '{"Content-Type":"application/json"}',
+        reqBody: '',
+        status: 404,
+        requestType: 'error',
+        cost: 89.2,
+        userTimeStamp: Date.now(),
+        markUserId: generateUserId(),
+        userId: 'test-user-001',
+        appId: APP_ID
+      }];
+      sendData(data);
+    }
+    
+    function reportError500() {
+      const data = [{
+        type: 'request',
+        domain: 'api.example.com',
+        pageUrl: 'http://localhost:3000/test',
+        url: '/api/order/create',
+        method: 'POST',
+        reqHeaders: '{"Content-Type":"application/json"}',
+        reqBody: '{"productId":123}',
+        status: 500,
+        requestType: 'error',
+        cost: 1256.8,
+        userTimeStamp: Date.now(),
+        markUserId: generateUserId(),
+        userId: 'test-user-001',
+        appId: APP_ID
+      }];
+      sendData(data);
+    }
+    
+    function reportSlowRequest() {
+      const data = [{
+        type: 'request',
+        domain: 'api.example.com',
+        pageUrl: 'http://localhost:3000/test',
+        url: '/api/data/export',
+        method: 'GET',
+        reqHeaders: '{"Content-Type":"application/json"}',
+        reqBody: '',
+        status: 200,
+        requestType: 'done',
+        cost: 5678.9,
+        userTimeStamp: Date.now(),
+        markUserId: generateUserId(),
+        userId: 'test-user-001',
+        appId: APP_ID
+      }];
+      sendData(data);
+    }
+    
+    function reportBatch() {
+      const apis = [
+        { url: '/api/user/login', method: 'POST', status: 200, cost: 234.5 },
+        { url: '/api/user/info', method: 'GET', status: 200, cost: 123.4 },
+        { url: '/api/product/list', method: 'GET', status: 200, cost: 345.6 },
+        { url: '/api/cart/add', method: 'POST', status: 404, cost: 89.3 },
+        { url: '/api/order/list', method: 'GET', status: 500, cost: 2345.7 },
+        { url: '/api/payment/create', method: 'POST', status: 200, cost: 456.8 },
+        { url: '/api/user/logout', method: 'POST', status: 200, cost: 78.9 },
+        { url: '/api/comments/list', method: 'GET', status: 200, cost: 567.8 },
+        { url: '/api/upload/image', method: 'POST', status: 413, cost: 3456.9 },
+        { url: '/api/settings/get', method: 'GET', status: 200, cost: 123.5 }
+      ];
+      
+      const data = apis.map(api => ({
+        type: 'request',
+        domain: 'api.example.com',
+        pageUrl: 'http://localhost:3000/test',
+        url: api.url,
+        method: api.method,
+        reqHeaders: '{"Content-Type":"application/json"}',
+        reqBody: api.method === 'POST' ? '{"data":"test"}' : '',
+        status: api.status,
+        requestType: api.status >= 400 ? 'error' : 'done',
+        cost: api.cost,
+        userTimeStamp: Date.now(),
+        markUserId: generateUserId(),
+        userId: 'test-user-001',
+        appId: APP_ID
+      }));
+      
+      sendData(data);
+    }
+    
+    function showResult(type, message) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = 'result ' + type;
+      resultDiv.innerHTML = message;
+    }
+  </script>
+</body>
+</html>

@@ -33,7 +33,7 @@ export async function initElasticsearchIndex() {
               type: { type: 'keyword' },
               // 页面信息
               domain: { type: 'keyword' },
-              pageUrl: { type: 'text' },
+              pageUrl: { type: 'text', fields: { keyword: { type: 'keyword' } } },
               isFirst: { type: 'boolean' },
               // 性能指标
               dnsTime: { type: 'float' },
@@ -44,13 +44,13 @@ export async function initElasticsearchIndex() {
               lcp: { type: 'float' },
               fid: { type: 'float' },
               // HTTP 请求
-              url: { type: 'text' },
+              url: { type: 'text', fields: { keyword: { type: 'keyword' } } },
               method: { type: 'keyword' },
               status: { type: 'integer' },
               requestType: { type: 'keyword' },
               cost: { type: 'float' },
               // JS 错误
-              message: { type: 'text' },
+              message: { type: 'text', fields: { keyword: { type: 'keyword' } } },
               colno: { type: 'integer' },
               lineno: { type: 'integer' },
               stack: { type: 'text' },
