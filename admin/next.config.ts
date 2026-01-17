@@ -1,13 +1,7 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  // 修复 Turbopack 在 monorepo 中的根目录问题
-  experimental: {
-    turbo: {
-      root: path.resolve(__dirname),
-    },
-  },
+  // 移除 turbopack 配置，让 Next.js 自动检测
 };
 
 export default nextConfig;
