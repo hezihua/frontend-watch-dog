@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Tooltip, message, Spin, Tag } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 
 interface AppItemProps {
   appInfo: {
@@ -25,6 +26,12 @@ export default function AppItem({ appInfo, onUpdate }: AppItemProps) {
   const [stats, setStats] = useState<AppStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
+  const router = useRouter();
+
+  // 进入控制台
+  const handleEnterConsole = () => {
+    router.push(`/visitor-stats?appId=${appInfo.appId}`);
+  };
 
   useEffect(() => {
     fetchStats();
@@ -213,7 +220,7 @@ export default function AppItem({ appInfo, onUpdate }: AppItemProps) {
         display: 'flex',
         gap: 8
       }}>
-        <Button type="link" style={{ padding: 0 }}>
+        <Button type="link" style={{ padding: 0 }} onClick={handleEnterConsole}>
           进入控制台
         </Button>
         {appInfo.status === 1 && (

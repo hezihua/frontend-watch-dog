@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, Statistic, Row, Col, message, Spin } from 'antd';
 import { UserOutlined, EyeOutlined, RiseOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 
 export default function VisitorStatsPage() {
@@ -11,6 +12,7 @@ export default function VisitorStatsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchApps();
@@ -28,7 +30,11 @@ export default function VisitorStatsPage() {
       const data = await res.json();
       if (data.code === 1000) {
         setApps(data.data || []);
-        if (data.data && data.data.length > 0) {
+        // 优先使用 URL 参数中的 appId
+        const urlAppId = searchParams.get('appId');
+        if (urlAppId) {
+          setActiveApp(urlAppId);
+        } else if (data.data && data.data.length > 0) {
           setActiveApp(data.data[0].appId);
         }
       }

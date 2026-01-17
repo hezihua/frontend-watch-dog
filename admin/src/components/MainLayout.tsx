@@ -15,6 +15,7 @@ import {
   MedicineBoxOutlined,
   OrderedListOutlined,
   RadarChartOutlined,
+  CodeOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import type { MenuProps } from 'antd';
@@ -80,6 +81,11 @@ export default function MainLayout({
       path: '/js-error',
       name: '健康情况',
       icon: MedicineBoxOutlined,
+    },
+    {
+      path: '/sourcemap',
+      name: 'SourceMap',
+      icon: CodeOutlined,
     },
     {
       path: '/top-analyse',
