@@ -20,6 +20,12 @@ export class Monitor {
   static userId: string;
 
   constructor(config: MonitorConfig){
+    // SSR 环境检查：只在浏览器环境中初始化
+    if (typeof window === 'undefined') {
+      console.warn('[Monitor] SDK 只能在浏览器环境中运行');
+      return;
+    }
+
     Monitor.config = config;
     const markUserId = window.localStorage.getItem(`web-watch-dog-markUserId-${Monitor.config.appId}`);
     if(markUserId){
@@ -139,9 +145,12 @@ export class Monitor {
       });
       this.lastPageMsg = this.getPageMsg();
     };
-    _history.addEventListener(() => {
-      dealWithPageInfo();
-    });
+    const historyInstance = _history();
+    if (historyInstance) {
+      historyInstance.addEventListener(() => {
+        dealWithPageInfo();
+      });
+    }
     window.addEventListener('hashchange', () => {
       dealWithPageInfo();
     });
@@ -367,7 +376,9 @@ export class Monitor {
   }
 
   static setUserId(userId: string){
+    if (typeof window === 'undefined') return;
     window.localStorage.setItem(`web-watch-dog-userId-${Monitor.config.appId}`, userId);
+    Monitor.userId = userId;
   }
 }
 

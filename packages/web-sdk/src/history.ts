@@ -40,6 +40,15 @@ class HistoryListener{
 }
 
 export const _history = (() => {
-  let constancs: HistoryListener;
-  return () => constancs = constancs ? constancs : new HistoryListener();
-})()();
+  let instance: HistoryListener | null = null;
+  return () => {
+    // 只在浏览器环境中初始化
+    if (typeof window === 'undefined' || typeof history === 'undefined') {
+      return null;
+    }
+    if (!instance) {
+      instance = new HistoryListener();
+    }
+    return instance;
+  };
+})();
