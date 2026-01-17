@@ -122,6 +122,7 @@ export default function RootLayout({ children }) {
 ### 环境要求
 
 - Node.js 18+
+- Docker & Docker Compose
 - MySQL 8.0+
 - Redis 6.0+
 - Elasticsearch 7.x
@@ -129,21 +130,40 @@ export default function RootLayout({ children }) {
 ### 安装与启动
 
 ```bash
-# 进入 admin 目录
+# 1. 进入 admin 目录
 cd admin
 
-# 安装依赖
+# 2. 启动 Docker 服务（MySQL、Redis、Elasticsearch）
+docker-compose up -d
+
+# 3. 安装依赖
 pnpm install
 
-# 配置环境变量
+# 4. 配置环境变量
 cp .env.example .env.local
 # 编辑 .env.local 配置数据库等连接信息
 
-# 初始化数据库
+# 5. 同步数据库 Schema（首次部署必须，后续可跳过）
 pnpm prisma db push
 
-# 启动开发服务器
+# 6. 启动开发服务器
 pnpm dev
+```
+
+### Docker 服务管理
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 停止所有服务
+docker-compose down
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
 ```
 
 访问 http://localhost:3000 进入管理后台。
